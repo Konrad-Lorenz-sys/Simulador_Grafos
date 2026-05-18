@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width">
+<title>Simulador de Grafos · Matemáticas Discretas · Konrad Lorenz</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=DM+Sans:wght@300;400;500;600;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0f1117;--bg2:#161b27;--bg3:#1e2535;--bg4:#252d3f;
+  --border:#2a3348;--border2:#3a4560;
+  --text:#e2e8f0;--text2:#8892a4;--text3:#4a5568;
+  --sage-green:#10b981;--sage-blue:#4f8ef7;--sage-purple:#7c3aed;--sage-amber:#f59e0b;
+  --font-mono:'JetBrains Mono',monospace;--font-ui:'DM Sans',sans-serif;
+}
+html,body{background:#0a0d14;font-family:var(--font-ui);color:var(--text);min-height:100vh}
+.wrapper{max-width:1100px;margin:0 auto;padding:24px 16px}
+
+/* HEADER */
+.k-header{display:flex;align-items:center;gap:16px;padding:16px 22px;background:linear-gradient(135deg,rgba(2,6,23,.98),rgba(11,18,40,1));border-radius:14px 14px 0 0;border:1px solid var(--border);border-bottom:1px solid rgba(79,142,247,.25)}
+.k-logo{height:52px;width:auto;border-radius:8px;background:#fff;padding:4px 8px;flex-shrink:0;object-fit:contain}
+.k-divider{width:1px;height:50px;background:rgba(148,163,184,.2);flex-shrink:0}
+.k-titles{flex:1;min-width:0}
+.k-titles h1{font-size:15px;font-weight:700;color:#f1f5f9;margin-bottom:3px;letter-spacing:.01em}
+.k-meta{display:flex;align-items:center;gap:6px;margin-bottom:5px;flex-wrap:wrap}
+.k-meta span{font-size:11px;color:#94a3b8}
+.k-meta .sep{color:rgba(148,163,184,.35)}
+.k-tags{display:flex;gap:6px;flex-wrap:wrap}
+.k-tag{display:inline-flex;align-items:center;gap:4px;padding:2px 10px;border-radius:999px;font-size:10px;font-weight:600;letter-spacing:.02em}
+.tag-green{background:rgba(34,197,94,.12);color:#4ade80;border:1px solid rgba(34,197,94,.2)}
+.tag-blue{background:rgba(79,142,247,.12);color:#7eb8f7;border:1px solid rgba(79,142,247,.2)}
+.tag-purple{background:rgba(124,58,237,.12);color:#a78bfa;border:1px solid rgba(124,58,237,.2)}
+.k-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0}
+.k-mod{font-family:var(--font-mono);font-size:11px;color:#64748b;text-align:right;line-height:1.6}
+.k-mod strong{color:#94a3b8;font-weight:600}
+
+/* INSTRUCCIONES */
+.instructions{background:var(--bg2);border:1px solid var(--border);border-top:none;padding:16px 22px}
+.ins-title{font-family:var(--font-mono);font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px}
+.ins-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.ins-card{background:var(--bg3);border-radius:9px;border:1px solid var(--border);padding:11px 14px;display:flex;gap:10px;align-items:flex-start}
+.ins-icon{font-size:18px;flex-shrink:0;margin-top:1px}
+.ins-card h3{font-size:12px;font-weight:600;color:var(--text);margin-bottom:3px}
+.ins-card p{font-size:11px;color:var(--text2);line-height:1.55}
+.ins-card code{font-family:var(--font-mono);font-size:10px;color:var(--sage-green);background:rgba(16,185,129,.1);padding:1px 5px;border-radius:3px}
+.kbd-row{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px}
+.kbd{font-family:var(--font-mono);font-size:10px;padding:2px 7px;border-radius:4px;background:var(--bg4);color:var(--text2);border:1px solid var(--border2)}
+.kbd span{color:var(--sage-green);font-weight:600}
+
+/* APP */
+.app{background:var(--bg);border:1px solid var(--border);border-top:none;border-radius:0 0 14px 14px;overflow:hidden}
+.topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:9px 16px;display:flex;align-items:center;gap:12px}
+.dots{display:flex;gap:6px}
+.dot{width:11px;height:11px;border-radius:50%}
+.dot-r{background:#ff5f56}.dot-y{background:#ffbd2e}.dot-g{background:#27c93f}
+.tb-title{font-family:var(--font-mono);font-size:12px;color:var(--text2);flex:1;text-align:center}
+.tb-badge{font-family:var(--font-mono);font-size:10px;padding:2px 8px;border-radius:4px;background:rgba(16,185,129,.15);color:var(--sage-green);border:1px solid rgba(16,185,129,.3)}
+.layout{display:grid;grid-template-columns:1fr 270px;height:520px}
+.canvas-area{position:relative;background:var(--bg);overflow:hidden;border-right:1px solid var(--border)}
+canvas#gc{display:block;width:100%;height:100%}
+#tooltip{position:absolute;display:none;background:var(--bg2);border:1px solid var(--border2);border-radius:6px;padding:6px 10px;font-family:var(--font-mono);font-size:11px;color:var(--text);pointer-events:none;z-index:10}
+.sidebar{background:var(--bg2);display:flex;flex-direction:column;overflow:hidden}
+.ss{padding:12px 14px;border-bottom:1px solid var(--border)}
+.sl{font-family:var(--font-mono);font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.stat-card{background:var(--bg3);border-radius:7px;padding:8px 10px;border:1px solid var(--border)}
+.stat-num{font-family:var(--font-mono);font-size:18px;font-weight:600;color:var(--text);line-height:1}
+.stat-lbl{font-size:11px;color:var(--text2);margin-top:2px}
+.algo-btns{display:flex;flex-direction:column;gap:5px}
+.algo-btn{font-family:var(--font-mono);font-size:11px;padding:7px 10px;border-radius:6px;border:1px solid var(--border2);background:var(--bg3);color:var(--text2);cursor:pointer;text-align:left;display:flex;align-items:center;gap:7px;transition:all .15s}
+.algo-btn:hover{background:var(--bg4);color:var(--text);border-color:var(--sage-blue)}
+.algo-btn.active{background:rgba(79,142,247,.15);color:var(--sage-blue);border-color:rgba(79,142,247,.5)}
+.algo-btn .sc{margin-left:auto;font-size:10px;color:var(--text3);background:var(--bg);padding:1px 5px;border-radius:3px;border:1px solid var(--border)}
+.mtbl-wrap{overflow-x:auto}
+.mtbl{border-collapse:collapse;font-family:var(--font-mono);font-size:11px}
+.mtbl th,.mtbl td{width:22px;height:22px;text-align:center;border:1px solid var(--border)}
+.mtbl th{color:var(--text3);background:var(--bg3)}
+.mtbl td.one{background:rgba(79,142,247,.25);color:var(--sage-blue)}
+.mtbl td.zero{color:var(--text3)}
+.mtbl td.diag{background:var(--bg3);color:var(--text3)}
+.out-scroll{flex:1;overflow-y:auto;min-height:0;padding:10px 14px}
+.out-line{font-family:var(--font-mono);font-size:11px;line-height:1.8;word-break:break-all}
+.out-line .p{color:var(--sage-green)}.out-line .r{color:var(--text)}.out-line .s{color:var(--sage-blue)}.out-line .w{color:var(--sage-amber)}.out-line .e{color:#f87171}.out-line .c{color:#c678dd}
+
+/* REPL */
+.repl-area{border-top:1px solid var(--border);background:var(--bg)}
+.repl-top{padding:8px 14px 4px;display:flex;align-items:center;gap:8px}
+.repl-label{font-family:var(--font-mono);font-size:10px;color:var(--sage-green);white-space:nowrap}
+.sugg-row{padding:0 14px 6px;display:flex;flex-wrap:wrap;gap:5px}
+.sugg{font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;border:1px solid var(--border2);background:var(--bg3);color:var(--text2);cursor:pointer;transition:all .12s}
+.sugg:hover{background:var(--bg4);color:var(--text);border-color:var(--sage-blue)}
+.repl-row{padding:0 14px 10px;display:flex;gap:8px;align-items:center}
+#repl-input{flex:1;font-family:var(--font-mono);font-size:12px;padding:8px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:7px;color:var(--text);outline:none;transition:border-color .15s}
+#repl-input:focus{border-color:var(--sage-green);box-shadow:0 0 0 2px rgba(16,185,129,.12)}
+#repl-input::placeholder{color:var(--text3)}
+#run-btn{font-family:var(--font-mono);font-size:12px;padding:8px 14px;background:rgba(16,185,129,.15);border:1px solid rgba(16,185,129,.4);border-radius:7px;color:var(--sage-green);cursor:pointer;white-space:nowrap;transition:all .15s}
+#run-btn:hover{background:rgba(16,185,129,.25)}
+.bottombar{background:var(--bg2);border-top:1px solid var(--border);padding:7px 14px;display:flex;align-items:center;gap:10px}
+.status-dot{width:7px;height:7px;border-radius:50%;background:var(--sage-green)}
+.status-txt{font-family:var(--font-mono);font-size:11px;color:var(--text2);flex:1}
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+<!-- HEADER KONRAD LORENZ -->
+<div class="k-header">
+  <img class="k-logo"
+    src="https://www.konradlorenz.edu.co/wp-content/themes/andreco/images/logo-konrad.png"
+    alt="Logo Fundación Universitaria Konrad Lorenz"
+    onerror="this.style.display='none'">
+  <div class="k-divider"></div>
+  <div class="k-titles">
+    <h1>Simulador Interactivo de Teoría de Grafos</h1>
+    <div class="k-meta">
+      <span>Matemáticas Discretas</span>
+      <span class="sep">·</span>
+      <span>Fundación Universitaria Konrad Lorenz</span>
+    </div>
+    <div class="k-tags">
+      <span class="k-tag tag-green">● Módulo 3</span>
+      <span class="k-tag tag-blue">Temática 2</span>
+      <span class="k-tag tag-purple">Recurso Interactivo</span>
+    </div>
+  </div>
+  <div class="k-right">
+    <div class="k-mod"><strong>MÓD 3</strong> · TEM 2<br><span style="font-size:10px">2026 · FUKL</span></div>
+  </div>
+</div>
+
+<!-- INSTRUCCIONES -->
+<div class="instructions">
+  <div class="ins-title">📋 Instrucciones de uso</div>
+  <div class="ins-grid">
+    <div class="ins-card">
+      <div class="ins-icon">🖱️</div>
+      <div>
+        <h3>Interacción con el grafo</h3>
+        <p>Haz <strong>clic</strong> en un vértice para ver sus propiedades. <strong>Arrastra</strong> los vértices para reorganizar el grafo libremente en el canvas.</p>
+      </div>
+    </div>
+    <div class="ins-card">
+      <div class="ins-icon">⚡</div>
+      <div>
+        <h3>Algoritmos rápidos</h3>
+        <p>Selecciona un vértice de inicio y presiona un algoritmo: <strong>BFS</strong>, <strong>DFS</strong>, <strong>Camino mínimo</strong> o <strong>MST</strong>. Se anima paso a paso.</p>
+        <div class="kbd-row">
+          <div class="kbd"><span>B</span> BFS</div>
+          <div class="kbd"><span>D</span> DFS</div>
+          <div class="kbd"><span>P</span> Camino</div>
+          <div class="kbd"><span>M</span> MST</div>
+          <div class="kbd"><span>R</span> Reset</div>
+        </div>
+      </div>
+    </div>
+    <div class="ins-card">
+      <div class="ins-icon">💻</div>
+      <div>
+        <h3>Consola Sage interactiva</h3>
+        <p>Escribe comandos reales de SageMath en la consola inferior. Usa los botones de sugerencias o escribe tu propio comando. Presiona <code>Enter</code> o <strong>▶ Ejecutar</strong>.</p>
+      </div>
+    </div>
+    <div class="ins-card">
+      <div class="ins-icon">🔧</div>
+      <div>
+        <h3>Modificar el grafo</h3>
+        <p>Puedes agregar o eliminar aristas y vértices en tiempo real con: <code>add_edge("A","E")</code>, <code>delete_edge("A","B")</code>, <code>add_vertex("F")</code>. Escribe <code>help()</code> para todos los comandos.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="app">
+  <div class="topbar">
+    <div class="dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+    <div class="tb-title">Konrad_grafos_mod3.ipynb — Grafos · Módulo 3 Temática 2</div>
+    <div class="tb-badge">● KonradMath</div>
+  </div>
+
+  <div class="layout">
+    <div class="canvas-area">
+      <canvas id="gc"></canvas>
+      <div id="tooltip"></div>
+    </div>
+    <div class="sidebar">
+      <div class="ss">
+        <div class="sl">propiedades del grafo</div>
+        <div class="stat-grid">
+          <div class="stat-card"><div class="stat-num" id="sn-v">5</div><div class="stat-lbl">vértices</div></div>
+          <div class="stat-card"><div class="stat-num" id="sn-e">6</div><div class="stat-lbl">aristas</div></div>
+          <div class="stat-card"><div class="stat-num" style="color:var(--sage-green)" id="sn-c">Sí</div><div class="stat-lbl">conexo</div></div>
+          <div class="stat-card"><div class="stat-num" style="color:var(--sage-amber)" id="sn-k">Sí</div><div class="stat-lbl">ciclos</div></div>
+        </div>
+      </div>
+      <div class="ss">
+        <div class="sl">algoritmos</div>
+        <div class="algo-btns">
+          <button class="algo-btn" id="btn-bfs" onclick="runAlgo('bfs')"><span style="color:var(--sage-blue)">▶</span>BFS — Amplitud<span class="sc">B</span></button>
+          <button class="algo-btn" id="btn-dfs" onclick="runAlgo('dfs')"><span style="color:var(--sage-purple)">▶</span>DFS — Profundidad<span class="sc">D</span></button>
+          <button class="algo-btn" id="btn-path" onclick="runAlgo('path')"><span style="color:var(--sage-amber)">▶</span>Camino mínimo<span class="sc">P</span></button>
+          <button class="algo-btn" id="btn-mst" onclick="runAlgo('mst')"><span style="color:var(--sage-green)">▶</span>Árbol expansión<span class="sc">M</span></button>
+          <button class="algo-btn" id="btn-reset" onclick="resetAll()"><span style="color:var(--text3)">↺</span>Limpiar<span class="sc">R</span></button>
+        </div>
+      </div>
+      <div class="ss">
+        <div class="sl">matriz de adyacencia</div>
+        <div class="mtbl-wrap"><table class="mtbl" id="mtbl"></table></div>
+      </div>
+      <div class="out-scroll" id="output"></div>
+    </div>
+  </div>
+
+  <div class="repl-area">
+    <div class="repl-top">
+      <span class="repl-label">sage: ~$</span>
+      <span style="font-family:var(--font-mono);font-size:10px;color:var(--text3)">Consola interactiva — comandos SageMath reales</span>
+    </div>
+    <div class="sugg-row">
+      <span style="font-family:var(--font-mono);font-size:10px;color:var(--text3);margin-right:2px">→</span>
+      <div class="sugg" onclick="fillInput('gGrafo1.vertices()')">vertices()</div>
+      <div class="sugg" onclick="fillInput('gGrafo1.edges()')">edges()</div>
+      <div class="sugg" onclick="fillInput('gGrafo1.degree(\'A\')')">degree("A")</div>
+      <div class="sugg" onclick="fillInput('gGrafo1.is_connected()')">is_connected()</div>
+      <div class="sugg" onclick="fillInput('gGrafo1.is_bipartite()')">is_bipartite()</div>
+      <div class="sugg" onclick="fillInput('gGrafo1.diameter()')">diameter()</div>
+      <div class="sugg" onclick="fillInput('gGrafo1.radius()')">radius()</div>
+      <div class="sugg" onclick="fillInput('gGrafo1.chromatic_number()')">chromatic_number()</div>
+      <div class="sugg" onclick="fillInput('gGrafo1.girth()')">girth()</div>
+      <div class="sugg" onclick="fillInput('gGrafo1.add_edge(\'A\',\'E\')')">add_edge()</div>
+      <div class="sugg" onclick="fillInput('gGrafo1.delete_edge(\'A\',\'B\')')">delete_edge()</div>
+      <div class="sugg" onclick="fillInput('gGrafo1.add_vertex(\'F\')')">add_vertex()</div>
+      <div class="sugg" onclick="fillInput('gGrafo1.shortest_path(\'A\',\'E\')')">shortest_path()</div>
+      <div class="sugg" onclick="fillInput('gGrafo1.eulerian_circuit()')">eulerian_circuit()</div>
+      <div class="sugg" onclick="fillInput('help()')">help()</div>
+    </div>
+    <div class="repl-row">
+      <input id="repl-input" type="text" placeholder="Escribe un comando Sage... ej: gGrafo1.degree('A')" autocomplete="off" spellcheck="false"/>
+      <button id="run-btn" onclick="runCommand()">▶ Ejecutar</button>
+    </div>
+  </div>
+
+  <div class="bottombar">
+    <div class="status-dot"></div>
+    <div class="status-txt" id="status-txt">Kernel activo · Python/Sage 3.11 · Listo</div>
+    <span style="font-family:var(--font-mono);font-size:11px;color:var(--text3)">Arrastra vértices · Clic para seleccionar · help() para comandos</span>
+  </div>
+</div>
+
+</div><!-- end wrapper -->
+
+<script>
+const VERTS_INIT=['A','B','C','D','E'];
+const EDGES_INIT=[['A','B'],['A','C'],['C','D'],['D','A'],['E','B'],['B','D']];
+let verts=[...VERTS_INIT];
+let edges=EDGES_INIT.map(e=>[...e]);
+const adj={};
+function rebuildAdj(){verts.forEach(v=>adj[v]=[]);edges.forEach(([a,b])=>{if(adj[a]&&adj[b]){adj[a].push(b);adj[b].push(a);}});}
+rebuildAdj();
+
+const cvs=document.getElementById('gc');
+const ctx=cvs.getContext('2d');
+let W,H;
+const pos={};
+
+function initPos(){
+  const cx=W/2,cy=H/2,r=Math.min(W,H)*0.35;
+  const ang={A:-Math.PI/2,B:Math.PI/6,C:-5*Math.PI/6,D:Math.PI/2-0.2,E:Math.PI/6+Math.PI/2};
+  verts.forEach((v,i)=>{
+    if(!pos[v]){const a=ang[v]!==undefined?ang[v]:(2*Math.PI*i/verts.length)-Math.PI/2;pos[v]={x:cx+r*Math.cos(a),y:cy+r*Math.sin(a)};}
+  });
+}
+function resize(){
+  const r=cvs.parentElement.getBoundingClientRect();
+  W=r.width;H=r.height;
+  cvs.width=W*devicePixelRatio;cvs.height=H*devicePixelRatio;
+  cvs.style.width=W+'px';cvs.style.height=H+'px';
+  ctx.scale(devicePixelRatio,devicePixelRatio);
+  initPos();
+}
+
+let highlighted=new Set(),hlEdges=new Set(),selected=null,algoMode=null;
+let hovered=null,dragging=null,dragOff={x:0,y:0};
+let pathVerts=[],mstEdges=new Set(),animTimer=null;
+
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='#0f1117';ctx.fillRect(0,0,W,H);
+  for(let i=1;i<7;i++){ctx.beginPath();ctx.moveTo(W/7*i,0);ctx.lineTo(W/7*i,H);ctx.strokeStyle='rgba(42,51,72,0.3)';ctx.lineWidth=.5;ctx.stroke();}
+  for(let i=1;i<5;i++){ctx.beginPath();ctx.moveTo(0,H/5*i);ctx.lineTo(W,H/5*i);ctx.strokeStyle='rgba(42,51,72,0.3)';ctx.lineWidth=.5;ctx.stroke();}
+
+  edges.forEach(([a,b])=>{
+    if(!pos[a]||!pos[b])return;
+    const k=[a,b].sort().join('-');
+    const isBFS=algoMode==='bfs'&&hlEdges.has(k);
+    const isDFS=algoMode==='dfs'&&hlEdges.has(k);
+    const isPath=algoMode==='path'&&hlEdges.has(k);
+    const isMST=algoMode==='mst'&&mstEdges.has(k);
+    ctx.beginPath();ctx.moveTo(pos[a].x,pos[a].y);ctx.lineTo(pos[b].x,pos[b].y);
+    if(isBFS){ctx.strokeStyle='#4f8ef7';ctx.lineWidth=2.5;}
+    else if(isDFS){ctx.strokeStyle='#7c3aed';ctx.lineWidth=2.5;}
+    else if(isPath){ctx.strokeStyle='#f59e0b';ctx.lineWidth=3;}
+    else if(isMST){ctx.strokeStyle='#10b981';ctx.lineWidth=2.5;}
+    else{ctx.strokeStyle='#2a3348';ctx.lineWidth=1;}
+    ctx.stroke();
+    const mx=(pos[a].x+pos[b].x)/2,my=(pos[a].y+pos[b].y)/2;
+    if(isBFS||isDFS||isPath||isMST){ctx.beginPath();ctx.arc(mx,my,3,0,Math.PI*2);ctx.fillStyle=isBFS?'#4f8ef7':isDFS?'#7c3aed':isPath?'#f59e0b':'#10b981';ctx.fill();}
+    ctx.fillStyle='rgba(139,146,164,0.45)';ctx.font='9px JetBrains Mono,monospace';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(a+'-'+b,mx,my-9);
+  });
+
+  verts.forEach(v=>{
+    if(!pos[v])return;
+    const {x,y}=pos[v];
+    const isSel=v===selected,isHov=v===hovered,isHL=highlighted.has(v);
+    const isPath2=algoMode==='path'&&pathVerts.includes(v);
+    const isMSTV=algoMode==='mst'&&isHL;
+    if(isSel||isHov){ctx.beginPath();ctx.arc(x,y,28,0,Math.PI*2);ctx.fillStyle=isSel?'rgba(79,142,247,.1)':'rgba(79,142,247,.05)';ctx.fill();}
+    ctx.beginPath();ctx.arc(x,y,20,0,Math.PI*2);
+    ctx.fillStyle=isSel?'rgba(79,142,247,.25)':isPath2?'rgba(245,158,11,.2)':isMSTV?'rgba(16,185,129,.2)':isHL?'rgba(124,58,237,.2)':isHov?'#252d3f':'#1e2535';
+    ctx.fill();
+    ctx.lineWidth=isSel?2:isHL||isPath2||isMSTV?1.5:1;
+    ctx.strokeStyle=isSel?'#4f8ef7':isPath2?'#f59e0b':isMSTV?'#10b981':isHL?'#7c3aed':isHov?'#4f8ef7':'#3a4560';
+    ctx.stroke();
+    ctx.fillStyle=isSel?'#4f8ef7':isHL?'#a78bfa':isPath2?'#f59e0b':isMSTV?'#10b981':'#e2e8f0';
+    ctx.font='600 14px JetBrains Mono,monospace';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(v,x,y);
+    ctx.fillStyle='rgba(139,146,164,0.5)';ctx.font='9px JetBrains Mono,monospace';
+    ctx.fillText('d:'+(adj[v]||[]).length,x,y+32);
+  });
+}
+
+function hit(mx,my){return verts.find(v=>pos[v]&&(pos[v].x-mx)**2+(pos[v].y-my)**2<576);}
+cvs.addEventListener('mousedown',e=>{const r=cvs.getBoundingClientRect();const mx=e.clientX-r.left,my=e.clientY-r.top;const v=hit(mx,my);if(v){dragging=v;dragOff={x:mx-pos[v].x,y:my-pos[v].y};cvs.style.cursor='grabbing';}});
+cvs.addEventListener('mousemove',e=>{
+  const r=cvs.getBoundingClientRect();const mx=e.clientX-r.left,my=e.clientY-r.top;
+  if(dragging){pos[dragging].x=Math.max(28,Math.min(W-28,mx-dragOff.x));pos[dragging].y=Math.max(28,Math.min(H-28,my-dragOff.y));draw();return;}
+  const v=hit(mx,my);if(v!==hovered){hovered=v;cvs.style.cursor=v?'pointer':'default';draw();}
+  const tt=document.getElementById('tooltip');
+  if(v){tt.style.display='block';tt.style.left=(mx+14)+'px';tt.style.top=(my-10)+'px';tt.textContent=v+' · grado:'+(adj[v]||[]).length+' · vecinos:['+(adj[v]||[]).join(',')+']';}
+  else tt.style.display='none';
+});
+cvs.addEventListener('mouseup',e=>{const r=cvs.getBoundingClientRect();const mx=e.clientX-r.left,my=e.clientY-r.top;const v=hit(mx,my);cvs.style.cursor=v?'pointer':'default';if(dragging&&v===dragging)selectVertex(v);dragging=null;});
+cvs.addEventListener('mouseleave',()=>{dragging=null;hovered=null;document.getElementById('tooltip').style.display='none';draw();});
+
+function selectVertex(v){
+  selected=v;
+  addOut(`<span class="p">sage: </span><span class="r">gGrafo1.vertex_info("${v}")</span>`);
+  addOut(`<span class="s">  grado = ${(adj[v]||[]).length} | vecinos = [${(adj[v]||[]).join(', ')}] | excentricidad = ${computeEcc(v)}</span>`);
+  updateStats();draw();
+}
+function computeEcc(v){const dist={[v]:0},q=[v];while(q.length){const u=q.shift();(adj[u]||[]).forEach(n=>{if(!(n in dist)){dist[n]=dist[u]+1;q.push(n);}});}return Math.max(...verts.map(u=>dist[u]??Infinity));}
+function addOut(html){const o=document.getElementById('output');const d=document.createElement('div');d.className='out-line';d.innerHTML=html;o.appendChild(d);o.scrollTop=o.scrollHeight;}
+function clearAlgoBtns(){['bfs','dfs','path','mst'].forEach(id=>document.getElementById('btn-'+id).classList.remove('active'));}
+function updateStats(){
+  document.getElementById('sn-v').textContent=verts.length;
+  document.getElementById('sn-e').textContent=edges.length;
+  const vis=new Set(),q=[verts[0]];vis.add(verts[0]);while(q.length){const u=q.shift();(adj[u]||[]).forEach(n=>{if(!vis.has(n)){vis.add(n);q.push(n);}});}
+  const conn=vis.size===verts.length;
+  document.getElementById('sn-c').textContent=conn?'Sí':'No';
+  document.getElementById('sn-c').style.color=conn?'var(--sage-green)':'#f87171';
+}
+function resetAll(){highlighted.clear();hlEdges.clear();pathVerts=[];mstEdges.clear();algoMode=null;selected=null;clearAlgoBtns();document.getElementById('status-txt').textContent='Kernel activo · Python/Sage 3.11 · Listo';addOut('<span class="p">sage: </span><span class="r">reset() ✓</span>');if(animTimer){clearTimeout(animTimer);animTimer=null;}draw();}
+
+function bfs(s){const o=[s],q=[s],v=new Set([s]),e=[];while(q.length){const u=q.shift();(adj[u]||[]).forEach(n=>{if(!v.has(n)){v.add(n);q.push(n);o.push(n);e.push([u,n].sort().join('-'));}});}return{order:o,edgeOrder:e};}
+function dfs(s){const o=[],e=[],v=new Set();function r(u){v.add(u);o.push(u);(adj[u]||[]).forEach(n=>{if(!v.has(n)){e.push([u,n].sort().join('-'));r(n);}});}r(s);return{order:o,edgeOrder:e};}
+function shortestPath(s,d){const prev={[s]:null},q=[s];while(q.length){const u=q.shift();if(u===d)break;(adj[u]||[]).forEach(n=>{if(!(n in prev)){prev[n]=u;q.push(n);}});}if(!(d in prev)&&s!==d)return null;const p=[];let c=d;while(c!==null){p.unshift(c);c=prev[c];}return p;}
+function computeMST(){const inT=new Set([verts[0]]),mE=new Set();while(inT.size<verts.length){let best=null;inT.forEach(u=>(adj[u]||[]).forEach(v=>{if(!inT.has(v)){const k=[u,v].sort().join('-');if(!best)best={u,v,k};}}));if(!best)break;inT.add(best.v);mE.add(best.k);}return mE;}
+
+function runAlgo(type){
+  if(animTimer){clearTimeout(animTimer);animTimer=null;}
+  highlighted.clear();hlEdges.clear();pathVerts=[];mstEdges.clear();
+  algoMode=type;clearAlgoBtns();document.getElementById('btn-'+type).classList.add('active');
+  const src=selected||verts[0];
+  if(type==='bfs'){const{order,edgeOrder}=bfs(src);addOut(`<span class="p">sage: </span><span class="r">gGrafo1.breadth_first_search("${src}")</span>`);animTraversal(order,edgeOrder,'BFS',src);}
+  else if(type==='dfs'){const{order,edgeOrder}=dfs(src);addOut(`<span class="p">sage: </span><span class="r">gGrafo1.depth_first_search("${src}")</span>`);animTraversal(order,edgeOrder,'DFS',src);}
+  else if(type==='path'){
+    const dst=verts.filter(v=>v!==src)[Math.floor(Math.random()*(verts.length-1))];
+    const path=shortestPath(src,dst);
+    addOut(`<span class="p">sage: </span><span class="r">gGrafo1.shortest_path("${src}","${dst}")</span>`);
+    if(path){pathVerts=path;path.forEach(v=>highlighted.add(v));for(let i=0;i<path.length-1;i++)hlEdges.add([path[i],path[i+1]].sort().join('-'));addOut(`<span class="s">  → [${path.join(' → ')}] longitud: ${path.length-1}</span>`);document.getElementById('status-txt').textContent=`Camino mínimo: ${src}→${dst} · ${path.length-1} arista(s)`;}
+    else addOut(`<span class="w">  → Sin camino de ${src} a ${dst}</span>`);
+    draw();
+  }else if(type==='mst'){
+    mstEdges=computeMST();mstEdges.forEach(k=>{const[a,b]=k.split('-');highlighted.add(a);highlighted.add(b);hlEdges.add(k);});
+    addOut(`<span class="p">sage: </span><span class="r">gGrafo1.min_spanning_tree()</span>`);
+    addOut(`<span class="s">  → MST aristas: [${[...mstEdges].join(', ')}]</span>`);
+    document.getElementById('status-txt').textContent=`MST · ${mstEdges.size} aristas`;draw();
+  }
+}
+function animTraversal(order,edgeOrder,name,src){
+  let i=0;
+  function step(){if(i<order.length){highlighted.add(order[i]);if(i>0&&edgeOrder[i-1])hlEdges.add(edgeOrder[i-1]);addOut(`<span class="s">  → visitando: ${order[i]}</span>`);draw();i++;animTimer=setTimeout(step,360);}else{addOut(`<span class="s">  ${name} completo: [${order.join(' → ')}]</span>`);document.getElementById('status-txt').textContent=`${name} desde ${src} · ${order.length} vértices`;}}
+  step();
+}
+function fillInput(val){const inp=document.getElementById('repl-input');inp.value=val;inp.focus();}
+
+const HELP=`Comandos disponibles:
+  gGrafo1.vertices()            → lista de vértices
+  gGrafo1.edges()               → lista de aristas
+  gGrafo1.degree("X")           → grado del vértice X
+  gGrafo1.neighbors("X")        → vecinos de X
+  gGrafo1.is_connected()        → ¿es conexo?
+  gGrafo1.is_bipartite()        → ¿es bipartito?
+  gGrafo1.diameter()            → diámetro del grafo
+  gGrafo1.radius()              → radio del grafo
+  gGrafo1.chromatic_number()    → número cromático (greedy)
+  gGrafo1.girth()               → cintura (ciclo más corto)
+  gGrafo1.shortest_path("X","Y")→ camino mínimo X→Y
+  gGrafo1.eulerian_circuit()    → ¿existe circuito euleriano?
+  gGrafo1.add_edge("X","Y")     → agregar arista
+  gGrafo1.delete_edge("X","Y")  → eliminar arista
+  gGrafo1.add_vertex("X")       → agregar vértice nuevo
+  reset()                       → limpiar estado visual`;
+
+function escHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function parseVertex(s){const m=s.match(/["']([A-Za-z0-9]+)["']/);return m?m[1]:null;}
+function parseTwoVerts(s){const m=[...s.matchAll(/["']([A-Za-z0-9]+)["']/g)];return m.length>=2?[m[0][1],m[1][1]]:null;}
+
+function buildMatrix(){
+  const t=document.getElementById('mtbl');
+  let h='<tr><th></th>'+verts.map(v=>'<th>'+v+'</th>').join('')+'</tr>';
+  verts.forEach(r=>{h+='<tr><th>'+r+'</th>';verts.forEach(c=>{h+=r===c?'<td class="diag">·</td>':(adj[r]||[]).includes(c)?'<td class="one">1</td>':'<td class="zero">0</td>';});h+='</tr>';});
+  t.innerHTML=h;
+}
+
+function runCommand(){
+  const inp=document.getElementById('repl-input');
+  const raw=inp.value.trim();if(!raw)return;
+  addOut(`<span class="p">sage: </span><span class="c">${escHtml(raw)}</span>`);
+  inp.value='';executeCommand(raw);
+}
+
+function executeCommand(raw){
+  const cmd=raw.toLowerCase().replace(/\s+/g,'');
+  try{
+    if(raw==='help()'||raw==='help'){HELP.split('\n').forEach(l=>addOut(`<span class="s">${escHtml(l)}</span>`));return;}
+    if(raw==='reset()'){resetAll();return;}
+    if(cmd.includes('vertices()')){addOut(`<span class="r">  [${verts.join(', ')}]</span>`);addOut(`<span class="s">  → ${verts.length} vértice(s)</span>`);return;}
+    if(cmd.includes('edges()')){addOut(`<span class="r">  [${edges.map(([a,b])=>`(${a},${b})`).join(', ')}]</span>`);addOut(`<span class="s">  → ${edges.length} arista(s)</span>`);return;}
+    if(cmd.includes('is_connected()')){const vis=new Set(),q=[verts[0]];vis.add(verts[0]);while(q.length){const u=q.shift();(adj[u]||[]).forEach(n=>{if(!vis.has(n)){vis.add(n);q.push(n);}});}const res=vis.size===verts.length;addOut(`<span class="r">  ${res}</span>`);addOut(`<span class="s">  → El grafo ${res?'ES':'NO ES'} conexo</span>`);return;}
+    if(cmd.includes('is_bipartite()')){const col={};let bip=true;function bc(s){col[s]=0;const q=[s];while(q.length){const u=q.shift();(adj[u]||[]).forEach(n=>{if(!(n in col)){col[n]=1-col[u];q.push(n);}else if(col[n]===col[u])bip=false;});}}verts.forEach(v=>{if(!(v in col))bc(v);});addOut(`<span class="r">  ${bip}</span>`);addOut(`<span class="s">  → El grafo ${bip?'ES':'NO ES'} bipartito</span>`);return;}
+    if(cmd.includes('diameter()')){let d=0;verts.forEach(s=>{const dist={[s]:0},q=[s];while(q.length){const u=q.shift();(adj[u]||[]).forEach(n=>{if(!(n in dist)){dist[n]=dist[u]+1;q.push(n);}});}verts.forEach(v=>{if(dist[v]!==undefined&&dist[v]>d)d=dist[v];});});addOut(`<span class="r">  ${d}</span>`);addOut(`<span class="s">  → Diámetro: ${d}</span>`);return;}
+    if(cmd.includes('radius()')){let rad=Infinity;verts.forEach(s=>{const dist={[s]:0},q=[s];while(q.length){const u=q.shift();(adj[u]||[]).forEach(n=>{if(!(n in dist)){dist[n]=dist[u]+1;q.push(n);}});}const ecc=Math.max(...verts.map(v=>dist[v]??Infinity));if(ecc<rad)rad=ecc;});addOut(`<span class="r">  ${rad}</span>`);addOut(`<span class="s">  → Radio: ${rad}</span>`);return;}
+    if(cmd.includes('chromatic_number()')){const asgn={};verts.forEach(v=>{const used=new Set((adj[v]||[]).map(n=>asgn[n]).filter(x=>x!==undefined));let c=1;while(used.has(c))c++;asgn[v]=c;});const cn=Math.max(...Object.values(asgn));addOut(`<span class="r">  ${cn}</span>`);addOut(`<span class="s">  → Número cromático (greedy): ${cn}</span>`);return;}
+    if(cmd.includes('girth()')){let g=Infinity;verts.forEach(s=>{const dist={},par={};dist[s]=0;par[s]=null;const q=[s];while(q.length){const u=q.shift();(adj[u]||[]).forEach(n=>{if(!(n in dist)){dist[n]=dist[u]+1;par[n]=u;q.push(n);}else if(par[u]!==n){const cy=dist[u]+dist[n]+1;if(cy<g)g=cy;}});}});const res=g===Infinity?'∞':g;addOut(`<span class="r">  ${res}</span>`);addOut(`<span class="s">  → Cintura: ${res}</span>`);return;}
+    if(cmd.includes('eulerian_circuit()')){const ae=verts.every(v=>(adj[v]||[]).length%2===0);const vis2=new Set(),q2=[verts[0]];vis2.add(verts[0]);while(q2.length){const u=q2.shift();(adj[u]||[]).forEach(n=>{if(!vis2.has(n)){vis2.add(n);q2.push(n);}});}const conn2=vis2.size===verts.length;if(ae&&conn2){addOut(`<span class="r">  True</span>`);addOut(`<span class="s">  → Existe circuito euleriano (todos los grados son pares)</span>`);}else{addOut(`<span class="r">  False</span>`);addOut(`<span class="s">  → No existe: ${!ae?'hay vértices de grado impar':''} ${!conn2?'grafo no conexo':''}</span>`);}return;}
+    if(cmd.includes('degree(')){const v=parseVertex(raw);if(v&&adj[v]!==undefined){addOut(`<span class="r">  ${(adj[v]||[]).length}</span>`);addOut(`<span class="s">  → grado de "${v}": ${(adj[v]||[]).length}</span>`);}else addOut(`<span class="w">  → Vértice "${v||'?'}" no encontrado</span>`);return;}
+    if(cmd.includes('neighbors(')){const v=parseVertex(raw);if(v&&adj[v]!==undefined){addOut(`<span class="r">  [${adj[v].join(', ')}]</span>`);}else addOut(`<span class="w">  → Vértice no encontrado</span>`);return;}
+    if(cmd.includes('shortest_path(')){const tv=parseTwoVerts(raw);if(tv){const[a,b]=tv;const p=shortestPath(a,b);if(p){addOut(`<span class="r">  [${p.join(', ')}]</span>`);addOut(`<span class="s">  → ${a}→${b}: longitud ${p.length-1}</span>`);pathVerts=p;p.forEach(v=>highlighted.add(v));for(let i=0;i<p.length-1;i++)hlEdges.add([p[i],p[i+1]].sort().join('-'));algoMode='path';clearAlgoBtns();draw();}else addOut(`<span class="w">  → No existe camino de "${a}" a "${b}"</span>`);}else addOut(`<span class="w">  → Uso: shortest_path("A","B")</span>`);return;}
+    if(cmd.includes('add_edge(')){const tv=parseTwoVerts(raw);if(tv){const[a,b]=tv;if(!verts.includes(a)||!verts.includes(b)){addOut(`<span class="w">  → Vértice no existe</span>`);return;}const ex=edges.some(([x,y])=>(x===a&&y===b)||(x===b&&y===a));if(ex)addOut(`<span class="w">  → Arista (${a},${b}) ya existe</span>`);else{edges.push([a,b]);rebuildAdj();buildMatrix();updateStats();addOut(`<span class="s">  → Arista (${a},${b}) agregada ✓</span>`);draw();}}else addOut(`<span class="w">  → Uso: add_edge("A","B")</span>`);return;}
+    if(cmd.includes('delete_edge(')){const tv=parseTwoVerts(raw);if(tv){const[a,b]=tv;const idx=edges.findIndex(([x,y])=>(x===a&&y===b)||(x===b&&y===a));if(idx>=0){edges.splice(idx,1);rebuildAdj();buildMatrix();updateStats();addOut(`<span class="s">  → Arista (${a},${b}) eliminada ✓</span>`);draw();}else addOut(`<span class="w">  → Arista no encontrada</span>`);}else addOut(`<span class="w">  → Uso: delete_edge("A","B")</span>`);return;}
+    if(cmd.includes('add_vertex(')){const v=parseVertex(raw);if(v){if(verts.includes(v)){addOut(`<span class="w">  → El vértice "${v}" ya existe</span>`);}else{verts.push(v);const cx=W/2,cy=H/2,r2=Math.min(W,H)*0.35,ang=Math.random()*Math.PI*2;pos[v]={x:cx+r2*Math.cos(ang),y:cy+r2*Math.sin(ang)};rebuildAdj();buildMatrix();updateStats();addOut(`<span class="s">  → Vértice "${v}" agregado ✓</span>`);draw();}}else addOut(`<span class="w">  → Uso: add_vertex("F")</span>`);return;}
+    addOut(`<span class="w">  → Comando no reconocido. Escribe help() para ver la lista.</span>`);
+  }catch(err){addOut(`<span class="e">  Error: ${err.message}</span>`);}
+}
+
+document.getElementById('repl-input').addEventListener('keydown',e=>{if(e.key==='Enter')runCommand();});
+document.addEventListener('keydown',e=>{
+  if(document.activeElement===document.getElementById('repl-input'))return;
+  const k=e.key.toLowerCase();
+  if(k==='b')runAlgo('bfs');else if(k==='d')runAlgo('dfs');else if(k==='p')runAlgo('path');else if(k==='m')runAlgo('mst');else if(k==='r')resetAll();
+});
+
+window.addEventListener('resize',()=>{resize();draw();});
+window.addEventListener('load',()=>{
+  resize();buildMatrix();updateStats();draw();
+  addOut('<span class="p">sage: </span><span class="r">plot(gGrafo1)</span>');
+  addOut('<span class="s">  Grafo cargado: 5 vértices, 6 aristas.</span>');
+  addOut('<span class="s">  Escribe help() para ver todos los comandos disponibles.</span>');
+});
+</script>
+</body>
+</html>
